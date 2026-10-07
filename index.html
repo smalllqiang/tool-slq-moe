@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>工具站</title>
+<style>
+  :root { color-scheme: light; }
+  body { margin: 0; padding: 48px 20px; background: #fff; color: #24292f;
+         font: 14px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 640px; margin: 0 auto; }
+  h1 { margin: 0 0 4px; font-size: 22px; font-weight: 600; }
+  .sub { margin: 0 0 28px; color: #57606a; }
+  ul { list-style: none; margin: 0; padding: 0;
+       border: 1px solid #d0d7de; border-radius: 6px; overflow: hidden; }
+  li + li { border-top: 1px solid #d0d7de; }
+  a { display: block; padding: 14px 16px; text-decoration: none; color: inherit; }
+  a:hover { background: #f6f8fa; }
+  .name { font-weight: 600; }
+  .desc { color: #57606a; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<main>
+  <h1>工具站</h1>
+  <p class="sub">一些自用的小工具</p>
+  <ul id="tools"></ul>
+</main>
+
+<script>
+// 新增工具只需在这里加一行
+const TOOLS = [
+  { name: "文本对比", desc: "对比两段文本的差异", href: "textdiff.html" },
+];
+
+document.getElementById("tools").innerHTML = TOOLS.map(t => `
+  <li><a href="${t.href}">
+    <div class="name">${t.name}</div>
+    <div class="desc">${t.desc}</div>
+  </a></li>`).join("");
+</script>
+</body>
+</html>

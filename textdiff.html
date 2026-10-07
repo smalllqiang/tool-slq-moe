@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>文本对比</title>
+<style>
+  body { margin: 0; padding: 12px; font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: #24292f; }
+  .inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  textarea { width: 100%; height: 200px; box-sizing: border-box; padding: 8px;
+             font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+             border: 1px solid #d0d7de; border-radius: 4px; resize: vertical; }
+  .bar { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+  button { padding: 4px 12px; font: inherit; border: 1px solid #d0d7de; border-radius: 4px;
+           background: #f6f8fa; cursor: pointer; }
+  button:hover { background: #eef1f4; }
+  #stat { margin-left: auto; color: #57606a; font: 12px/1 ui-monospace, Menlo, Consolas, monospace; }
+  #out { border: 1px solid #d0d7de; border-radius: 4px; overflow: auto; max-height: 60vh;
+         font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  #out:empty { display: none; }
+  .row { display: grid; grid-template-columns: 3.5em minmax(0, 1fr) 3.5em minmax(0, 1fr); }
+  .row > span { padding: 0 6px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .ln { color: #8c959f; text-align: right; background: #f6f8fa; border-right: 1px solid #eaeef2; }
+  .ln-r { border-left: 1px solid #eaeef2; }
+  .cell { min-height: 1.55em; }
+  .delete .c-left, .change .c-left { background: #ffebe9; }
+  .delete .ln, .change .ln { background: #ffd7d5; }
+  .insert .c-right, .change .c-right { background: #e6ffec; }
+  .insert .ln-r, .change .ln-r { background: #ccffd8; }
+  .change .c-left mark { background: #ffc0bb; }
+  .change .c-right mark { background: #a9f0b8; }
+  mark { color: inherit; }
+</style>
+</head>
+<body>
+
+<div class="inputs">
+  <textarea id="left" placeholder="原始文本" spellcheck="false"></textarea>
+  <textarea id="right" placeholder="对比文本" spellcheck="false"></textarea>
+</div>
+
+<div class="bar">
+  <button id="btn-compare">对比</button>
+  <button id="btn-swap">交换</button>
+  <button id="btn-clear">清空</button>
+  <span id="stat"></span>
+</div>
+
+<div id="out"></div>
+
+<script src="textdiff.js"></script>
+</body>
+</html>
