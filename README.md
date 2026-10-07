@@ -6,7 +6,7 @@ sq's tool website —— 一些自用的小工具集合。
 
 | 工具     | 入口                           | 说明                                               |
 | -------- | ------------------------------ | -------------------------------------------------- |
-| 文本对比 | [textdiff.html](textdiff.html) | 左右两栏对比文本差异，按行显示增删，行内高亮到词级 |
+| 文本对比 | [public/textdiff.html](public/textdiff.html) | 左右两栏对比文本差异，按行显示增删，行内高亮到词级 |
 
 ## 文本对比
 
@@ -18,14 +18,28 @@ sq's tool website —— 一些自用的小工具集合。
 - 快捷键：`Ctrl/Cmd + Enter` 执行对比；另有「交换」「清空」按钮，右上角显示 `−删除 +新增` 行数。
 - `textdiff.js` 同时导出 `myersDiff`、`diffLines`、`buildRows` 等函数供 Node 使用（`module.exports`），可单独做单元测试。
 
+## 目录结构
+
+- `public/` —— 唯一会被发布到 Cloudflare 的目录，新增页面/资源都放这里。
+- 仓库根目录（`README.md`、`LICENSE`、`wrangler.jsonc`、`.git/`）不会被上传。
+
 ## 本地预览
 
-直接双击 `index.html`，或起一个静态服务器：
+直接双击 `public/index.html`，或起一个静态服务器：
 
 ```sh
-python3 -m http.server 8000
+python3 -m http.server 8000 -d public
 # 然后访问 http://localhost:8000
 ```
+
+## 部署
+
+Cloudflare Workers Builds 配置：
+
+- 构建命令：`exit 0`（纯静态，无需构建）
+- 部署命令：`npx wrangler deploy`
+
+`wrangler.jsonc` 中 `assets.directory` 固定指向 `./public`。
 
 ## License
 

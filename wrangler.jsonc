@@ -2,6 +2,6 @@
     "name": "tool-slq-moe",
     "compatibility_date": "2026-10-08",
     "assets": {
-        "directory": "."
+        "directory": "./public"
     }
 }
