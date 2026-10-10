@@ -164,11 +164,19 @@ function splitLines(text) {
   return text.replace(/\r\n?/g, '\n').split('\n');
 }
 
-const TOKEN_RE = /([ \t]+|[A-Za-z0-9_]+|[^\sA-Za-z0-9_])/g;
+// 必须覆盖整行: 三个分支分别是 空白 / 字母数字下划线 / 其它字符。
+// 若空白只用 [ \t] 匹配, 像 U+3000(全角空格)、U+00A0(不换行空格) 这类字符会漏掉,
+// match() 直接跳过它们, token 长度之和就小于原文长度, 行内高亮的字符偏移会整体左移。
+const TOKEN_RE = /(\s+|[A-Za-z0-9_]+|[^\sA-Za-z0-9_])/g;
 
 function splitTokens(line) {
   const out = line.match(TOKEN_RE);
-  return out || [];
+  if (!out) return [];
+  // 兜底: 万一将来正则改动导致漏字符, 退化为逐字符切分, 保证偏移精确
+  let total = 0;
+  for (const t of out) total += t.length;
+  if (total !== line.length) return Array.from(line);
+  return out;
 }
 
 /* ---------------- 行对齐 ---------------- */
@@ -339,11 +347,14 @@ function makeCell(cls, text, marks) {
   }
   let pos = 0;
   for (const [start, len] of marks) {
+    // 防御: 丢弃越界/重叠/长度为 0 的区间, 保证单元格文本永远不被吞掉或错位
+    if (len <= 0 || start < pos || start >= text.length) continue;
+    const end = Math.min(start + len, text.length);
     if (start > pos) el.appendChild(document.createTextNode(text.slice(pos, start)));
     const mark = document.createElement('mark');
-    mark.textContent = text.slice(start, start + len);
+    mark.textContent = text.slice(start, end);
     el.appendChild(mark);
-    pos = start + len;
+    pos = end;
   }
   if (pos < text.length) el.appendChild(document.createTextNode(text.slice(pos)));
   return el;
