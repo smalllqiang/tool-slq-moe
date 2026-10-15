@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>乱码恢复</title>
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32">
+<style>
+  body { margin: 0; padding: 12px; font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: #24292f; }
+  textarea { width: 100%; height: 108px; box-sizing: border-box; padding: 8px;
+             font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+             border: 1px solid #d0d7de; border-radius: 4px; resize: vertical; }
+  .bar { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+  button { padding: 4px 12px; font: inherit; border: 1px solid #d0d7de; border-radius: 4px;
+           background: #f6f8fa; cursor: pointer; }
+  button:hover { background: #eef1f4; }
+  button:disabled { color: #8c959f; cursor: default; }
+  button:disabled:hover { background: #f6f8fa; }
+  #stat { margin-left: auto; color: #57606a; font: 12px/1 ui-monospace, Menlo, Consolas, monospace; }
+  .hint { margin: 0 0 6px; color: #57606a; font-size: 12px; }
+  .hint b { font-weight: 600; color: #24292f; }
+
+  #out { border: 1px solid #d0d7de; border-radius: 4px; overflow: auto; max-height: 58vh; }
+  #out[hidden] { display: none; }
+  table { border-collapse: separate; border-spacing: 0; table-layout: fixed;
+          width: 100%; min-width: 940px; }
+  th, td { border-bottom: 1px solid #eaeef2; border-right: 1px solid #eaeef2; }
+  thead th { position: sticky; top: 0; z-index: 2; background: #f6f8fa; padding: 6px 8px;
+             font-size: 12px; font-weight: 600; white-space: nowrap; text-align: left; }
+  thead th:first-child { width: 84px; left: 0; z-index: 3; }
+  tbody th { position: sticky; left: 0; z-index: 1; background: #f6f8fa; padding: 6px 8px;
+             font-size: 12px; font-weight: 600; white-space: nowrap; text-align: left; }
+  tr:last-child th, tr:last-child td { border-bottom: 0; }
+  th:last-child, td:last-child { border-right: 0; }
+
+  td.cell { padding: 4px 6px; vertical-align: top; cursor: pointer;
+            font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            white-space: pre-wrap; overflow-wrap: anywhere; max-height: 4.5em; overflow: hidden; }
+  td.cell:hover { background: #f6f8fa; }
+  td.cell.same { color: #8c959f; background: #fafbfc; }
+  td.cell.na { color: #8c959f; font-style: italic; font-family: inherit;
+               background: repeating-linear-gradient(135deg, #fafbfc, #fafbfc 6px, #f2f4f6 6px, #f2f4f6 12px); }
+  td.cell.selected { outline: 2px solid #0969da; outline-offset: -2px; }
+  .more { color: #8c959f; }
+
+  #detail { margin-top: 8px; border: 1px solid #d0d7de; border-radius: 4px; }
+  #detail[hidden] { display: none; }
+  .detail-head { display: flex; align-items: center; gap: 8px; padding: 6px 8px;
+                 background: #f6f8fa; border-bottom: 1px solid #eaeef2; }
+  .detail-head span { font-size: 12px; color: #57606a; }
+  .detail-head button { margin-left: auto; }
+  .detail-head button + button { margin-left: 0; }
+  #detail-text { margin: 0; padding: 8px; max-height: 36vh; overflow: auto;
+                 font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+                 white-space: pre-wrap; overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+
+<textarea id="input" placeholder="粘贴乱码文本，例如「浣犲ソ锛屼笘鐣岋紒」或「ä½ å¥½ä¸–ç•Œ」" spellcheck="false"></textarea>
+
+<div class="bar">
+  <button id="btn-example">示例</button>
+  <button id="btn-clear">清空</button>
+  <span id="stat"></span>
+</div>
+
+<p class="hint">
+  <b>列</b>是「现在编码」（当初被误用的那个），<b>行</b>是「原来编码」（想恢复成的那个）。
+  单元格 = 把输入按列编码还原成字节，再用行编码解码 —— <b>哪一格重新变得可读，原文就是它</b>。
+  「不可用」表示该前提不成立（输入里有这种编码表示不了的字符）。点格子看完整结果。
+</p>
+
+<div id="out" hidden></div>
+
+<div id="detail" hidden>
+  <div class="detail-head">
+    <span id="detail-title"></span>
+    <button id="btn-reuse">作为输入</button>
+    <button id="btn-copy">复制</button>
+  </div>
+  <pre id="detail-text"></pre>
+</div>
+
+<script src="mojibake.js"></script>
+</body>
+</html>
