@@ -8,6 +8,7 @@ sq's tool website —— 一些自用的小工具集合。
 | -------- | ------------------------------ | -------------------------------------------------- |
 | 文本对比 | [public/textdiff.html](public/textdiff.html) | 左右两栏对比文本差异，按行显示增删，行内高亮到词级 |
 | 乱码恢复 | [public/mojibake.html](public/mojibake.html) | 输入乱码，用一个编码矩阵试出原文                   |
+| 正则可视化 | [public/regex.html](public/regex.html) | 输入正则，勾选标志，查看结构图并实时测试匹配       |
 
 ## 文本对比
 
@@ -32,6 +33,17 @@ sq's tool website —— 一些自用的小工具集合。
 - `mojibake.js` 同样可用于 Node（`module.exports` 导出 `encodeTo`、`decodeFrom`、`recoverCell`、`recoverTable` 等）。
 
 实现上有两点值得记一笔：浏览器的 `TextEncoder` 只支持 UTF-8，所以 `encodeTo` 对 GBK/Big5/Shift_JIS/EUC-KR 是用 `TextDecoder` 遍历所有合法字节序列建反查表得到的（首次使用该编码时构建并缓存，约几毫秒）；另外按 WHATWG 规范 `TextDecoder('iso-8859-1')` 实际等价于 windows-1252，两者会给出完全相同的结果，因此 ISO-8859-1 是手工实现的，保证 0x00–0xFF 与 U+0000–U+00FF 一一对应。
+
+## 正则可视化
+
+把正则表达式拆成结构图：顺序、分支、分组、量词都用嵌套方框表示，特殊元素标注中文含义，结构图和原始表达式可以互相悬停高亮。
+
+- 输入框旁可勾选 `i`（忽略大小写）、`g`（全局）、`m`（多行），另外提供 `s`（点号匹配换行）和 `u`（Unicode）。粘贴 `/pattern/gi` 形式的字面量会自动拆出表达式和标志。
+- 支持捕获组、命名捕获组、非捕获组、先行/后行断言、字符组与范围、Unicode 属性、反向引用、贪婪/懒惰量词等常见写法；某个写法超出解析范围时退回按原文显示，不影响匹配测试。
+- 下方的「匹配测试」实时高亮匹配，并列出每次匹配的位置、编号捕获组和命名捕获组。
+- 匹配在 Web Worker 中执行，超过 1 秒会中止并提示，避免灾难性回溯卡死页面；Worker 不可用时退回主线程，并跳过含嵌套量词的表达式。
+- 表达式上限 2000 字符；测试文本只取前 2000 字符，最多显示 500 个匹配（列表最多 200 条）。
+- `regex.js` 导出 `parseRegex`、`matchText`、`riskyPattern`、`splitRegexLiteral` 等函数供 Node 使用（`module.exports`）。
 
 ## 目录结构
 

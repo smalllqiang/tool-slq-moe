@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>正则可视化</title>
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 12px; font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: #24292f; }
+
+  button { padding: 4px 12px; font: inherit; border: 1px solid #d0d7de; border-radius: 4px;
+           background: #f6f8fa; cursor: pointer; }
+  button:hover { background: #eef1f4; }
+
+  /* ---------- 表达式输入 ---------- */
+  .pattern-bar { display: flex; gap: 8px; align-items: center; }
+  .pattern-box { display: flex; flex: 1; align-items: center; min-width: 0;
+                 padding: 0 10px; border: 1px solid #d0d7de; border-radius: 6px; background: #fff; }
+  .pattern-box:focus-within { border-color: #0969da; box-shadow: 0 0 0 3px rgba(9, 105, 218, .12); }
+  .pattern-box .slash { flex: none; color: #8c959f; font: 15px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+                        user-select: none; }
+  #pattern { flex: 1; min-width: 0; padding: 9px 3px; border: 0; outline: 0; background: transparent;
+             font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #24292f; }
+  #flag-text { flex: none; color: #0969da; font: 12px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+  /* ---------- 选项 ---------- */
+  .opts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 9px 0 10px; }
+  .opts label { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: #57606a;
+                cursor: pointer; user-select: none; }
+  .opts input[type="checkbox"] { margin: 0; accent-color: #0969da; }
+  .opts code { padding: 0 4px; border: 1px solid #d0d7de; border-radius: 3px; background: #f6f8fa;
+               font: 11px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #57606a; }
+  #stat { margin-left: auto; color: #57606a;
+          font: 12px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  #stat.err { color: #cf222e; }
+
+  /* ---------- 结构图 ---------- */
+  #viz { border: 1px solid #d0d7de; border-radius: 6px; background: #fff; }
+  #viz:empty { display: none; }
+  .viz-empty { padding: 28px 14px; color: #8c959f; text-align: center; }
+  .viz-card { padding: 10px; }
+  .viz-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-bottom: 8px; }
+  .viz-title { font-weight: 600; }
+  .viz-sub { color: #8c959f; font-size: 12px; }
+  .viz-counts { margin-left: auto; color: #57606a; font-size: 12px; }
+  .src { margin-bottom: 10px; padding: 7px 9px; border: 1px solid #eaeef2; border-radius: 5px;
+         background: #f6f8fa; font: 12px/1.8 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+         white-space: pre-wrap; overflow-wrap: anywhere; }
+  .src-ch { border-radius: 2px; }
+  .src-ch.t-lit { color: #1f2328; }
+  .src-ch.t-esc { color: #8250df; font-weight: 600; }
+  .src-ch.t-cls { color: #0969da; font-weight: 600; }
+  .src-ch.t-dot { color: #8250df; font-weight: 600; }
+  .src-ch.t-quant { color: #bc4c00; font-weight: 600; }
+  .src-ch.t-anchor { color: #bf3989; font-weight: 600; }
+  .src-ch.t-alt { color: #bc4c00; font-weight: 700; }
+  .src-ch.t-punct { color: #6e7781; }
+  .src-ch.hl { background: #fff8c5; box-shadow: inset 0 -1px 0 #d4a72c; }
+  .src-ch.err-ch { background: #ffebe9; color: #cf222e; box-shadow: inset 0 -2px 0 #cf222e; }
+
+  .tree { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; }
+  .node { position: relative; border-radius: 5px; }
+  .node.active { outline: 2px solid #0969da; outline-offset: 1px; }
+
+  .n-seq { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px; }
+
+  .n-alt { padding: 4px 6px 6px; border: 1px dashed #d4a72c; background: #fffdf3; }
+  .n-alt-head { margin-bottom: 4px; font-size: 11px; color: #9a6700; }
+  .branches { display: flex; flex-direction: column; gap: 6px; }
+  .branch { display: flex; align-items: flex-start; gap: 6px; }
+  .blabel { flex: none; min-width: 16px; height: 16px; margin-top: 4px; padding: 0 2px;
+            border: 1px solid #d4a72c; border-radius: 8px; background: #fff8c5; color: #9a6700;
+            font: 10px/14px ui-monospace, Menlo, Consolas, monospace; text-align: center; }
+  .branch-body { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px; }
+
+  .n-group { padding: 3px 5px 5px; border: 1px solid #afb8c1; background: #f6f8fa; }
+  .n-group.g-capture { border-color: #54aeff; background: #f2f8ff; }
+  .n-group.g-look { border-style: dashed; border-color: #bf3989; background: #fff5f8; }
+  .g-head { margin-bottom: 3px; color: #57606a; font: 10px/1.5 system-ui, sans-serif; white-space: nowrap; }
+  .g-capture .g-head { color: #0550ae; }
+  .g-look .g-head { color: #a1256d; }
+  .g-body { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px; }
+
+  .chip { display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+          min-width: 26px; min-height: 30px; padding: 2px 7px;
+          border: 1px solid #d0d7de; border-radius: 5px; background: #f6f8fa;
+          font: 12px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; text-align: center; }
+  .chip .sym { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: pre; }
+  .chip .lab { margin-top: 1px; color: #6e7781; font: 10px/1.2 system-ui, sans-serif; white-space: nowrap; }
+  .chip.lit { border-color: #afb8c1; background: #fff; }
+  .chip.lit.word { font-family: system-ui, sans-serif; }
+  .chip.esc { border-color: #d8b9ff; background: #faf5ff; }
+  .chip.cls { border-color: #80baff; background: #eef7ff; }
+  .chip.set { border-color: #c297ff; background: #f3f0ff; }
+  .chip.dot { border-color: #c297ff; background: #f3f0ff; }
+  .chip.anchor { border-color: #ffb3d1; background: #fff0f6; }
+  .chip.backref { border-color: #7ee2a8; background: #ecfdf3; }
+  .chip.backref.warn { border-color: #d4a72c; background: #fff8c5; }
+  .chip.empty { border-style: dashed; color: #8c959f; background: #fafbfc; }
+
+  .q-wrap { position: relative; display: inline-flex; align-items: center; gap: 3px; }
+  .q-badge { flex: none; min-width: 16px; padding: 1px 4px; border: 1px solid #e0c56b;
+             border-radius: 9px; background: #fff8c5; color: #9a6700;
+             font: 9px/12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+             text-align: center; white-space: nowrap; }
+  .q-wrap.lazy .q-badge { border-color: #80baff; background: #eef7ff; color: #0969da; }
+
+  .err-msg { color: #cf222e; font-size: 13px; }
+  .err-pos { color: #57606a; font-size: 12px; }
+  .err-note { color: #57606a; font-size: 12px; }
+
+  /* ---------- 匹配测试 ---------- */
+  .test-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 18px 0 6px; }
+  .test-head h2 { margin: 0; font-size: 14px; font-weight: 600; }
+  .test-note { color: #8c959f; font-size: 12px; }
+  #match-stat { margin-left: auto; color: #57606a; font-size: 12px; }
+  #match-stat.warn { color: #9a6700; }
+  #subject { width: 100%; height: 86px; padding: 8px; resize: vertical; border: 1px solid #d0d7de;
+             border-radius: 4px; font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .match-view { max-height: 32vh; margin: 8px 0 0; padding: 8px; overflow: auto;
+                border: 1px solid #eaeef2; border-radius: 4px; background: #fafbfc;
+                font: 12px/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+                white-space: pre-wrap; overflow-wrap: anywhere; }
+  .match-view[hidden] { display: none; }
+  .match-view mark { padding: 1px 0; border-radius: 2px; background: #fff1a8; color: inherit; }
+  .match-view mark.alt { background: #d7f0ff; }
+  .match-view mark.zero { display: inline-block; width: 2px; height: 1.3em; background: #cf222e;
+                          vertical-align: text-bottom; }
+  #match-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+  .match { padding: 6px 8px; border: 1px solid #eaeef2; border-radius: 4px; background: #fff; }
+  .match-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px;
+                font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .mnum { color: #0969da; font-weight: 600; }
+  .mpos { color: #8c959f; font-size: 11px; }
+  .mtext { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .match-groups { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
+  .match-group { display: flex; gap: 8px; color: #57606a;
+                 font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .match-group .gname { flex: none; min-width: 72px; color: #8250df; }
+  .match-group .gval { color: #24292f; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .no-match { color: #57606a; font-size: 13px; }
+
+  @media (max-width: 560px) {
+    .pattern-bar { flex-wrap: wrap; }
+    .pattern-box { flex-basis: 100%; }
+    #stat { margin-left: 0; }
+    .viz-counts { margin-left: 0; }
+    #match-stat { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="pattern-bar">
+  <div class="pattern-box">
+    <span class="slash">/</span>
+    <input id="pattern" type="text" spellcheck="false" autocomplete="off" aria-label="正则表达式"
+           placeholder="输入正则表达式，例如 (\w+)@(\w+\.\w{2,})">
+    <span class="slash">/</span>
+    <span id="flag-text"></span>
+  </div>
+  <button id="btn-example">示例</button>
+  <button id="btn-clear">清空</button>
+</div>
+
+<div class="opts">
+  <label title="忽略大小写：字母不区分大小写"><input type="checkbox" id="f-i"> 忽略大小写 <code>i</code></label>
+  <label title="全局匹配：勾选后找出所有匹配，否则只匹配第一处"><input type="checkbox" id="f-g" checked> 全局 <code>g</code></label>
+  <label title="多行：^ 和 $ 匹配每一行的开头和结尾"><input type="checkbox" id="f-m"> 多行 <code>m</code></label>
+  <label title="点号匹配换行：. 也能匹配换行符"><input type="checkbox" id="f-s"> 点号匹配换行 <code>s</code></label>
+  <label title="Unicode 模式：支持 \p{...}、\u{...} 等写法"><input type="checkbox" id="f-u"> Unicode <code>u</code></label>
+  <span id="stat"></span>
+</div>
+
+<div id="viz"></div>
+
+<div class="test-head">
+  <h2>匹配测试</h2>
+  <span class="test-note">可选 · 实时高亮</span>
+  <span id="match-stat"></span>
+</div>
+<textarea id="subject" spellcheck="false" placeholder="粘贴要测试的文本，匹配结果会实时高亮"></textarea>
+<pre id="match-view" class="match-view" hidden></pre>
+<div id="match-list"></div>
+
+<script src="regex.js"></script>
+</body>
+</html>
