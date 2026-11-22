@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>随机数生成</title>
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32">
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px 40px; background: #fff; color: #24292f;
+         font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 720px; margin: 0 auto; }
+  h1 { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
+  .sub { margin: 0 0 18px; color: #57606a; font-size: 13px; }
+
+  .panel { padding: 14px; border: 1px solid #d0d7de; border-radius: 8px; background: #f6f8fa; }
+  .fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .field > span { color: #57606a; font-size: 12px; }
+  .field input { width: 100%; padding: 6px 8px; border: 1px solid #d0d7de; border-radius: 5px;
+                 background: #fff; color: #24292f; font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .field input:focus { outline: 0; border-color: #0969da; box-shadow: 0 0 0 3px rgba(9, 105, 218, .12); }
+
+  .opts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 12px; }
+  .opts label { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: #57606a;
+                cursor: pointer; user-select: none; }
+  .opts label.disabled { color: #8c959f; cursor: default; }
+  .opts input[type="checkbox"] { margin: 0; accent-color: #0969da; }
+  .source { margin-left: auto; color: #8c959f; font-size: 12px; }
+  .source.warn { color: #bc4c00; }
+
+  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+  button { padding: 5px 14px; border: 1px solid #d0d7de; border-radius: 5px; background: #f6f8fa;
+           color: #24292f; font: inherit; cursor: pointer; }
+  button:hover { background: #eef1f4; }
+  button:disabled { color: #8c959f; cursor: default; }
+  button:disabled:hover { background: #f6f8fa; }
+  #stat { margin-left: auto; color: #57606a;
+          font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  #stat.err { color: #cf222e; }
+
+  #out { display: block; width: 100%; height: 300px; margin-top: 12px; padding: 10px 12px;
+         border: 1px solid #d0d7de; border-radius: 8px; background: #fff; color: #24292f;
+         font: 13px/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+         resize: vertical; }
+  #out:focus { outline: 0; border-color: #0969da; box-shadow: 0 0 0 3px rgba(9, 105, 218, .12); }
+  #out::placeholder { color: #8c959f; }
+
+  .hint { margin: 12px 0 0; color: #57606a; font-size: 12px; line-height: 1.7; }
+  .hint code { padding: 0 4px; border: 1px solid #d0d7de; border-radius: 3px; background: #f6f8fa;
+               font: 11px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+  @media (max-width: 560px) {
+    .fields { grid-template-columns: 1fr 1fr; }
+    #stat { width: 100%; margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+<main>
+  <h1>随机数生成</h1>
+  <p class="sub">按范围和数量生成随机整数或小数</p>
+
+  <form id="form" class="panel" autocomplete="off">
+    <div class="fields">
+      <label class="field"><span>最小值</span><input id="min" type="number" step="any" value="1"></label>
+      <label class="field"><span>最大值</span><input id="max" type="number" step="any" value="100"></label>
+      <label class="field"><span>数量</span><input id="count" type="number" min="1" max="10000" step="1" value="1"></label>
+      <label class="field"><span>小数位数</span><input id="decimals" type="number" min="0" max="10" step="1" value="0"></label>
+    </div>
+
+    <div class="opts">
+      <label title="生成的值互不相同"><input type="checkbox" id="unique"> 不重复</label>
+      <label title="把结果从小到大排列"><input type="checkbox" id="sort"> 递增排序</label>
+      <span id="source" class="source"></span>
+    </div>
+
+    <div class="bar">
+      <button type="submit">生成</button>
+      <button type="button" id="btn-copy" disabled>复制</button>
+      <button type="button" id="btn-clear">清空</button>
+      <span id="stat" aria-live="polite"></span>
+    </div>
+  </form>
+
+  <textarea id="out" readonly aria-label="生成的随机数" spellcheck="false" placeholder="随机数会显示在这里"></textarea>
+
+  <p class="hint">
+    优先使用 <code>Web Crypto</code>，并用拒绝采样消除取模偏差；「不重复」是无放回抽样。
+    小数先把边界向内取整到指定精度再采样，所以结果不会超出范围。数量上限 10000，按
+    <code>Ctrl/Cmd + Enter</code> 也可以生成。
+  </p>
+</main>
+
+<script src="random.js"></script>
+</body>
+</html>

@@ -9,6 +9,7 @@ sq's tool website —— 一些自用的小工具集合。
 | 文本对比 | [public/textdiff.html](public/textdiff.html) | 左右两栏对比文本差异，按行显示增删，行内高亮到词级 |
 | 乱码恢复 | [public/mojibake.html](public/mojibake.html) | 输入乱码，用一个编码矩阵试出原文                   |
 | 正则可视化 | [public/regex.html](public/regex.html) | 输入正则，勾选标志，查看结构图并实时测试匹配       |
+| 随机数生成 | [public/random.html](public/random.html) | 按范围、数量生成随机整数或小数，可去重、排序       |
 
 ## 文本对比
 
@@ -44,6 +45,18 @@ sq's tool website —— 一些自用的小工具集合。
 - 匹配在 Web Worker 中执行，超过 1 秒会中止并提示，避免灾难性回溯卡死页面；Worker 不可用时退回主线程，并跳过含嵌套量词的表达式。
 - 表达式上限 2000 字符；测试文本只取前 2000 字符，最多显示 500 个匹配（列表最多 200 条）。
 - `regex.js` 导出 `parseRegex`、`matchText`、`riskyPattern`、`splitRegexLiteral` 等函数供 Node 使用（`module.exports`）。
+
+## 随机数生成
+
+按范围、数量和精度生成随机数，适合抽签、测试数据一类的临时需求。
+
+- 输入最小值、最大值、数量和小数位数（0 表示整数），一次最多生成 10000 个。
+- 随机数优先来自 Web Crypto 的 `getRandomValues`，并用拒绝采样消除取模偏差；超过 32 位的范围用两个随机字拼成 53 位整数，最多覆盖 2^53 个可选值。
+- 「不重复」是无放回抽样：范围内可选值不够时直接报错，不会反复重抽卡死；范围很大而数量很小时也不会按范围开数组（Floyd 算法，O(数量) 次随机）。未勾选排序时会再做一次 Fisher–Yates 洗牌，抽满整个范围也能得到随机顺序。
+- 小数模式把边界向内取整到指定精度（下界向上、上界向下）后采样，因此输出不会越界；范围内没有该精度的值时直接报错。该模式不支持「不重复」。
+- 可选「递增排序」；结果每行一个数，支持一键复制，`Ctrl/Cmd + Enter` 也能生成。
+- Web Crypto 不可用时退回 `Math.random`，页面会标注当前随机源。
+- `random.js` 导出 `randBelow`、`sampleUniqueTicks`、`generateNumbers`、`formatTick` 等函数供 Node 使用（`module.exports`）。
 
 ## 目录结构
 
